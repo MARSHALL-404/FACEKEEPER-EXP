@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FaceKeeper — Reports</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<div class="topbar">
+  <a class="logo" href="index.html"><div class="logo-dot"></div>FaceKeeper</a>
+  <div class="nav-tabs">
+    <a class="tab" href="index.html">Dashboard</a>
+    <a class="tab" href="attendance.html">Attendance</a>
+    <a class="tab" href="register.html">Register</a>
+    <a class="tab" href="users.html">Users</a>
+    <a class="tab active" href="reports.html">Reports</a>
+    <a class="tab" href="statistics.html">Statistics</a>
+    <a class="tab" href="retrain.html">Re-train</a>
+  </div>
+  <div class="topbar-right">
+    <div class="live-dot"></div>
+    <span id="clock">--:--</span>
+  </div>
+</div>
+
+<div class="container">
+
+  <div class="card">
+    <div class="card-header"><span class="card-title">Generate Reports</span></div>
+    <div class="card-body">
+      <div class="grid-3" style="margin-bottom:0">
+        <div class="rcard" onclick="generate('Today — CSV')">
+          <div class="ri">📄</div>
+          <div class="rn">Today's Report</div>
+          <div class="rd">Export as CSV</div>
+        </div>
+        <div class="rcard" onclick="generate('Today — Excel')">
+          <div class="ri">📊</div>
+          <div class="rn">Today's Report</div>
+          <div class="rd">Export as Excel</div>
+        </div>
+        <div class="rcard" onclick="generate('Full CSV')">
+          <div class="ri">🗂</div>
+          <div class="rn">Full Report</div>
+          <div class="rd">All-time CSV</div>
+        </div>
+        <div class="rcard" onclick="generate('Full Excel')">
+          <div class="ri">📋</div>
+          <div class="rn">Full Report</div>
+          <div class="rd">All-time Excel</div>
+        </div>
+        <div class="rcard" onclick="toggleUserPanel()">
+          <div class="ri">👤</div>
+          <div class="rn">User-specific</div>
+          <div class="rd">Single user report</div>
+        </div>
+        <div class="rcard" onclick="generate('Monthly Summary')">
+          <div class="ri">📅</div>
+          <div class="rn">Monthly Summary</div>
+          <div class="rd">Aggregate stats</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- User-specific panel -->
+  <div class="card" id="userPanel" style="display:none;max-width:500px">
+    <div class="card-header"><span class="card-title">User-specific Report</span></div>
+    <div class="card-body">
+      <div class="grid-2" style="margin-bottom:1rem">
+        <div class="form-group">
+          <label class="label">Roll No.</label>
+          <input class="input" placeholder="e.g. 101">
+        </div>
+        <div class="form-group">
+          <label class="label">Date Range</label>
+          <select class="select">
+            <option>This Week</option>
+            <option>This Month</option>
+            <option>Last 3 Months</option>
+            <option>All Time</option>
+          </select>
+        </div>
+      </div>
+      <div class="btn-group">
+        <button class="btn btn-primary" onclick="generate('User CSV')">⬇ Export CSV</button>
+        <button class="btn btn-outline" onclick="generate('User Excel')">⬇ Export Excel</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="toasts" id="toasts"></div>
+
+<script>
+setInterval(() => {
+  document.getElementById('clock').textContent = new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
+}, 1000);
+document.getElementById('clock').textContent = new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
+
+function toast(msg, type='ok') {
+  const icons = {ok:'✓',err:'✕',info:'ℹ'};
+  const t = document.createElement('div');
+  t.className = `toast ${type}`;
+  t.innerHTML = `<span>${icons[type]}</span> ${msg}`;
+  document.getElementById('toasts').appendChild(t);
+  setTimeout(() => t.remove(), 3000);
+}
+
+function generate(name) {
+  toast(`Generating ${name}...`, 'info');
+  setTimeout(() => toast(`${name} ready!`, 'ok'), 1200);
+  // Replace with: fetch('/api/report/...').then(...)
+}
+
+function toggleUserPanel() {
+  const p = document.getElementById('userPanel');
+  p.style.display = p.style.display === 'none' ? 'block' : 'none';
+}
+</script>
+</body>
+</html>

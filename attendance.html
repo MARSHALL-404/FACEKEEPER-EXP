@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FaceKeeper — Attendance</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<div class="topbar">
+  <a class="logo" href="index.html"><div class="logo-dot"></div>FaceKeeper</a>
+  <div class="nav-tabs">
+    <a class="tab" href="index.html">Dashboard</a>
+    <a class="tab active" href="attendance.html">Attendance</a>
+    <a class="tab" href="register.html">Register</a>
+    <a class="tab" href="users.html">Users</a>
+    <a class="tab" href="reports.html">Reports</a>
+    <a class="tab" href="statistics.html">Statistics</a>
+    <a class="tab" href="retrain.html">Re-train</a>
+  </div>
+  <div class="topbar-right">
+    <div class="live-dot"></div>
+    <span id="clock">--:--</span>
+  </div>
+</div>
+
+<div class="container">
+
+  <div class="grid-2" style="margin-bottom:0">
+
+    <!-- Camera side -->
+    <div>
+      <div class="card">
+        <div class="card-header"><span class="card-title">📷 Camera Feed</span></div>
+        <div class="card-body">
+          <div class="cam-box" id="camBox">
+            <video id="video" autoplay playsinline></video>
+            <div class="cam-placeholder" id="camPH">
+              <div class="icon">📷</div>
+              <p>Click Start Camera</p>
+            </div>
+            <div class="scan-line" id="scanLine"></div>
+          </div>
+          <div class="btn-group">
+            <button class="btn btn-primary" id="startBtn" onclick="startCam()">▶ Start Camera</button>
+            <button class="btn btn-outline" id="stopBtn" style="display:none" onclick="stopCam()">⏹ Stop</button>
+            <button class="btn btn-green" onclick="toast('Detection started!','ok')">⚡ Begin Detection</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Detection side -->
+    <div style="display:flex;flex-direction:column;gap:1rem">
+      <div class="card">
+        <div class="card-header"><span class="card-title">Detection Status</span></div>
+        <div class="card-body">
+          <div style="margin-bottom:0.9rem">
+            <div class="label">Detected Face</div>
+            <div style="font-size:1.15rem;font-weight:600;color:var(--accent)" id="detName">Waiting...</div>
+          </div>
+          <div style="margin-bottom:0.9rem">
+            <div class="label">Confidence</div>
+            <div style="font-size:0.85rem;font-weight:500;margin-bottom:0.3rem" id="detConf">—</div>
+            <div class="prog-track"><div class="prog-fill" id="confFill" style="width:0%"></div></div>
+          </div>
+          <div class="label" style="margin-bottom:0.4rem">Live Log</div>
+          <div class="log" id="camLog"><span class="info">Start camera to begin...</span></div>
+        </div>
+      </div>
+
+      <div class="grid-3" style="margin-bottom:0">
+        <div class="stat green">
+          <div class="stat-label">Marked</div>
+          <div class="stat-value" id="sc">0</div>
+        </div>
+        <div class="stat orange">
+          <div class="stat-label">Unknown</div>
+          <div class="stat-value" id="su">0</div>
+        </div>
+        <div class="stat blue">
+          <div class="stat-label">Duration</div>
+          <div class="stat-value" style="font-size:1.2rem" id="sd">0:00</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Today's table -->
+  <div class="card" style="margin-top:1rem">
+    <div class="card-header">
+      <span class="card-title">Today's Attendance</span>
+      <div class="btn-group">
+        <input class="input" style="width:180px;padding:0.4rem 0.75rem;font-size:0.78rem" placeholder="🔍 Search..." oninput="filterTable(this.value)">
+        <button class="btn btn-outline btn-sm" onclick="toast('Exporting CSV...','info')">⬇ CSV</button>
+        <button class="btn btn-outline btn-sm" onclick="toast('Exporting Excel...','info')">⬇ Excel</button>
+      </div>
+    </div>
+    <table id="attTable">
+      <thead><tr><th>Name</th><th>Roll No.</th><th>Time In</th><th>Confidence</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr><td>Priya Sharma</td><td>101</td><td>09:02:14</td><td>97.3%</td><td><span class="pill green">● Present</span></td></tr>
+        <tr><td>Rohan Mehta</td><td>102</td><td>09:03:41</td><td>95.1%</td><td><span class="pill green">● Present</span></td></tr>
+        <tr><td>Ananya Singh</td><td>103</td><td>09:07:23</td><td>98.8%</td><td><span class="pill green">● Present</span></td></tr>
+        <tr><td>Vikram Patel</td><td>104</td><td>09:14:02</td><td>91.5%</td><td><span class="pill orange">⏱ Late</span></td></tr>
+        <tr><td>Sneha Joshi</td><td>105</td><td>—</td><td>—</td><td><span class="pill red">✕ Absent</span></td></tr>
+        <tr><td>Arjun Nair</td><td>106</td><td>08:58:44</td><td>96.2%</td><td><span class="pill green">● Present</span></td></tr>
+        <tr><td>Kavya Reddy</td><td>107</td><td>—</td><td>—</td><td><span class="pill red">✕ Absent</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+</div>
+
+<div class="toasts" id="toasts"></div>
+
+<script>
+setInterval(() => {
+  document.getElementById('clock').textContent = new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
+}, 1000);
+document.getElementById('clock').textContent = new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
+
+function toast(msg, type='ok') {
+  const icons = {ok:'✓',err:'✕',info:'ℹ'};
+  const t = document.createElement('div');
+  t.className = `toast ${type}`;
+  t.innerHTML = `<span>${icons[type]}</span> ${msg}`;
+  document.getElementById('toasts').appendChild(t);
+  setTimeout(() => t.remove(), 3000);
+}
+
+let stream = null, sc = 0, su = 0, ss = null, ticker = null;
+
+async function startCam() {
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({video:true});
+    const v = document.getElementById('video');
+    v.srcObject = stream; v.classList.add('on');
+    document.getElementById('camPH').style.display = 'none';
+    document.getElementById('scanLine').classList.add('on');
+    document.getElementById('startBtn').style.display = 'none';
+    document.getElementById('stopBtn').style.display = 'inline-flex';
+    ss = Date.now();
+    simDetect();
+  } catch(e) { toast('Camera access denied','err'); }
+}
+
+function stopCam() {
+  if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
+  if (ticker) clearInterval(ticker);
+  document.getElementById('video').classList.remove('on');
+  document.getElementById('camPH').style.display = '';
+  document.getElementById('scanLine').classList.remove('on');
+  document.getElementById('startBtn').style.display = 'inline-flex';
+  document.getElementById('stopBtn').style.display = 'none';
+}
+
+function simDetect() {
+  const names = ['Priya Sharma','Rohan Mehta','Ananya Singh','Unknown'];
+  const confs = [97,95,98,0];
+  ticker = setInterval(() => {
+    if (!stream) return;
+    const i = Math.floor(Math.random()*4);
+    const n = names[i], c = confs[i] + Math.floor(Math.random()*3);
+    document.getElementById('detName').textContent = n;
+    document.getElementById('detConf').textContent = n==='Unknown'?'—':c+'%';
+    document.getElementById('confFill').style.width = (n==='Unknown'?0:c)+'%';
+    n==='Unknown'?su++:sc++;
+    document.getElementById('sc').textContent = sc;
+    document.getElementById('su').textContent = su;
+    const e = Math.floor((Date.now()-ss)/1000);
+    document.getElementById('sd').textContent = Math.floor(e/60)+':'+(e%60+'').padStart(2,'0');
+    const log = document.getElementById('camLog');
+    const now = new Date().toLocaleTimeString();
+    const cls = n==='Unknown'?'warn':'ok';
+    const icon = n==='Unknown'?'⚠':'✓';
+    log.innerHTML += `<div><span class="t">${now}</span><span class="${cls}">${icon} ${n==='Unknown'?'Unknown face':''+n+' — marked'}</span></div>`;
+    log.scrollTop = log.scrollHeight;
+  }, 2500);
+}
+
+function filterTable(q) {
+  document.querySelectorAll('#attTable tbody tr').forEach(r => {
+    r.style.display = r.textContent.toLowerCase().includes(q.toLowerCase()) ? '' : 'none';
+  });
+}
+</script>
+</body>
+</html>

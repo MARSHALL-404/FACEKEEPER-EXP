@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FaceKeeper — Users</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<div class="topbar">
+  <a class="logo" href="index.html"><div class="logo-dot"></div>FaceKeeper</a>
+  <div class="nav-tabs">
+    <a class="tab" href="index.html">Dashboard</a>
+    <a class="tab" href="attendance.html">Attendance</a>
+    <a class="tab" href="register.html">Register</a>
+    <a class="tab active" href="users.html">Users</a>
+    <a class="tab" href="reports.html">Reports</a>
+    <a class="tab" href="statistics.html">Statistics</a>
+    <a class="tab" href="retrain.html">Re-train</a>
+  </div>
+  <div class="topbar-right">
+    <div class="live-dot"></div>
+    <span id="clock">--:--</span>
+  </div>
+</div>
+
+<div class="container">
+
+  <div class="search-row">
+    <input class="input" placeholder="🔍 Search by name or roll no..." oninput="filterUsers(this.value)">
+    <a class="btn btn-primary" href="register.html">+ Register New</a>
+    <span style="font-size:0.78rem;color:var(--muted);margin-left:auto">30 registered</span>
+  </div>
+
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:0.9rem" id="usersGrid"></div>
+
+</div>
+
+<div class="toasts" id="toasts"></div>
+
+<script>
+setInterval(() => {
+  document.getElementById('clock').textContent = new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
+}, 1000);
+document.getElementById('clock').textContent = new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
+
+function toast(msg, type='ok') {
+  const icons = {ok:'✓',err:'✕',info:'ℹ'};
+  const t = document.createElement('div');
+  t.className = `toast ${type}`;
+  t.innerHTML = `<span>${icons[type]}</span> ${msg}`;
+  document.getElementById('toasts').appendChild(t);
+  setTimeout(() => t.remove(), 3000);
+}
+
+const users = [
+  {n:'Priya Sharma', roll:'101'},{n:'Rohan Mehta', roll:'102'},{n:'Ananya Singh', roll:'103'},
+  {n:'Vikram Patel', roll:'104'},{n:'Sneha Joshi', roll:'105'},{n:'Arjun Nair', roll:'106'},
+  {n:'Kavya Reddy', roll:'107'},{n:'Amit Kumar', roll:'108'},{n:'Divya Rao', roll:'109'},
+  {n:'Rahul Verma', roll:'110'},{n:'Meera Iyer', roll:'111'},{n:'Kiran Nair', roll:'112'},
+  {n:'Pooja Das', roll:'113'},{n:'Suresh Pillai', roll:'114'},{n:'Nisha Gupta', roll:'115'},
+  {n:'Arun Joshi', roll:'116'},{n:'Sakshi Rana', roll:'117'},{n:'Dev Patel', roll:'118'},
+];
+
+function renderUsers(list) {
+  document.getElementById('usersGrid').innerHTML = list.length === 0
+    ? `<div style="color:var(--muted);font-size:0.82rem;grid-column:1/-1">No users found.</div>`
+    : list.map(u => `
+      <div class="ucard">
+        <div class="avatar">${u.n.charAt(0)}</div>
+        <div class="un">${u.n}</div>
+        <div class="uid">Roll: ${u.roll}</div>
+        <div class="ubtns">
+          <button class="btn btn-red btn-sm" style="font-size:0.66rem;padding:0.2rem 0.55rem" onclick="toast('Deleted ${u.n}','ok')">Delete</button>
+        </div>
+      </div>`
+    ).join('');
+}
+
+function filterUsers(q) {
+  renderUsers(users.filter(u =>
+    u.n.toLowerCase().includes(q.toLowerCase()) || u.roll.includes(q)
+  ));
+}
+
+renderUsers(users);
+</script>
+</body>
+</html>

@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FaceKeeper — Re-train</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<div class="topbar">
+  <a class="logo" href="index.html"><div class="logo-dot"></div>FaceKeeper</a>
+  <div class="nav-tabs">
+    <a class="tab" href="index.html">Dashboard</a>
+    <a class="tab" href="attendance.html">Attendance</a>
+    <a class="tab" href="register.html">Register</a>
+    <a class="tab" href="users.html">Users</a>
+    <a class="tab" href="reports.html">Reports</a>
+    <a class="tab" href="statistics.html">Statistics</a>
+    <a class="tab active" href="retrain.html">Re-train</a>
+  </div>
+  <div class="topbar-right">
+    <div class="live-dot"></div>
+    <span id="clock">--:--</span>
+  </div>
+</div>
+
+<div class="container">
+
+  <div class="card" style="max-width:520px">
+    <div class="card-header"><span class="card-title">🔄 Re-train Face Recognizer</span></div>
+    <div class="card-body">
+
+      <div style="background:var(--orange-light);border:1px solid #fed7aa;border-radius:8px;padding:0.9rem;margin-bottom:1.3rem;font-size:0.78rem;color:var(--orange);line-height:1.6">
+        ⚠ Re-training updates the model with all registered faces. Do not close the page while training.
+      </div>
+
+      <div class="grid-2" style="margin-bottom:1.2rem">
+        <div class="stat blue">
+          <div class="stat-label">Registered</div>
+          <div class="stat-value">30</div>
+          <div class="stat-sub">total faces</div>
+        </div>
+        <div class="stat green">
+          <div class="stat-label">Images</div>
+          <div class="stat-value">150</div>
+          <div class="stat-sub">training samples</div>
+        </div>
+      </div>
+
+      <div style="background:var(--bg);border-radius:8px;padding:0.9rem;font-size:0.78rem;line-height:1.9;margin-bottom:1.3rem;color:var(--muted)">
+        <div>Algorithm: <span style="color:var(--text);font-weight:500">LBPH Face Recognizer</span></div>
+        <div>Last trained: <span style="color:var(--text);font-weight:500">2 days ago</span></div>
+        <div>Model file: <span style="color:var(--text);font-weight:500">classifier.yml</span></div>
+      </div>
+
+      <button class="btn btn-primary" id="retrainBtn" onclick="startRetrain()">🔄 Start Re-training</button>
+
+      <div id="retrainProg" style="display:none;margin-top:1.3rem">
+        <div class="label" style="margin-bottom:0.4rem">Training Progress</div>
+        <div class="prog-track" style="margin-bottom:0.5rem">
+          <div class="prog-fill" id="rBar" style="width:0%"></div>
+        </div>
+        <div id="rStatus" style="font-size:0.72rem;color:var(--muted)">Initializing...</div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<div class="toasts" id="toasts"></div>
+
+<script>
+setInterval(() => {
+  document.getElementById('clock').textContent = new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
+}, 1000);
+document.getElementById('clock').textContent = new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
+
+function toast(msg, type='ok') {
+  const icons = {ok:'✓',err:'✕',info:'ℹ'};
+  const t = document.createElement('div');
+  t.className = `toast ${type}`;
+  t.innerHTML = `<span>${icons[type]}</span> ${msg}`;
+  document.getElementById('toasts').appendChild(t);
+  setTimeout(() => t.remove(), 3000);
+}
+
+function startRetrain() {
+  document.getElementById('retrainProg').style.display = 'block';
+  document.getElementById('retrainBtn').disabled = true;
+  document.getElementById('retrainBtn').textContent = 'Training...';
+
+  let p = 0;
+  const msgs = ['Loading training images...','Extracting face features...','Training LBPH model...','Validating accuracy...','Saving classifier.yml...'];
+  let mi = 0;
+
+  const interval = setInterval(() => {
+    if (p >= 100) return;
+    p += Math.random() * 9;
+    if (p > 100) p = 100;
+    document.getElementById('rBar').style.width = p + '%';
+    const ni = Math.min(Math.floor(p / 20), msgs.length - 1);
+    if (ni !== mi) { mi = ni; document.getElementById('rStatus').textContent = msgs[mi]; }
+    if (p >= 100) {
+      clearInterval(interval);
+      document.getElementById('rStatus').textContent = '✓ Complete — Accuracy: 96.4%';
+      document.getElementById('rStatus').style.color = 'var(--green)';
+      document.getElementById('retrainBtn').textContent = '✓ Re-trained';
+      document.getElementById('retrainBtn').style.background = 'var(--green)';
+      toast('Model re-trained successfully!', 'ok');
+    }
+  }, 400);
+}
+</script>
+</body>
+</html>

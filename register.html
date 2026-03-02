@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FaceKeeper — Register</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<div class="topbar">
+  <a class="logo" href="index.html"><div class="logo-dot"></div>FaceKeeper</a>
+  <div class="nav-tabs">
+    <a class="tab" href="index.html">Dashboard</a>
+    <a class="tab" href="attendance.html">Attendance</a>
+    <a class="tab active" href="register.html">Register</a>
+    <a class="tab" href="users.html">Users</a>
+    <a class="tab" href="reports.html">Reports</a>
+    <a class="tab" href="statistics.html">Statistics</a>
+    <a class="tab" href="retrain.html">Re-train</a>
+  </div>
+  <div class="topbar-right">
+    <div class="live-dot"></div>
+    <span id="clock">--:--</span>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- Step indicator -->
+  <div class="steps-row">
+    <div class="step-item active" id="sn1"><div class="step-num">1</div>Details</div>
+    <div class="step-line"></div>
+    <div class="step-item" id="sn2"><div class="step-num">2</div>Capture</div>
+    <div class="step-line"></div>
+    <div class="step-item" id="sn3"><div class="step-num">3</div>Train</div>
+  </div>
+
+  <!-- Step 1 -->
+  <div id="rs1">
+    <div class="card" style="max-width:480px">
+      <div class="card-header"><span class="card-title">Step 1 — User Details</span></div>
+      <div class="card-body">
+        <div class="form-group">
+          <label class="label">Roll No. *</label>
+          <input class="input" id="rRoll" placeholder="e.g. 101" type="number" min="1">
+        </div>
+        <div class="form-group">
+          <label class="label">Full Name *</label>
+          <input class="input" id="rName" placeholder="e.g. Priya Sharma">
+        </div>
+        <button class="btn btn-primary" onclick="goStep(2)">Next — Capture Face →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Step 2 -->
+  <div id="rs2" style="display:none">
+    <div class="card" style="max-width:500px">
+      <div class="card-header"><span class="card-title">Step 2 — Capture Face</span></div>
+      <div class="card-body">
+        <div class="cam-box">
+          <video id="regVideo" autoplay playsinline></video>
+          <div class="cam-placeholder" id="regPH">
+            <div class="icon">🤳</div>
+            <p>Click Start Camera</p>
+          </div>
+        </div>
+
+        <!-- Status message shown during/after captures -->
+        <div id="capMsg" style="display:none;margin-bottom:0.9rem;padding:0.7rem 0.9rem;border-radius:8px;font-size:0.78rem;font-weight:500"></div>
+
+        <div class="btn-group">
+          <button class="btn btn-primary" id="startCamBtn" onclick="startRegCam()">📷 Start Camera</button>
+          <button class="btn btn-green" id="trainBtn" style="display:none" onclick="goStep(3)">Train Model →</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Step 3 -->
+  <div id="rs3" style="display:none">
+    <div class="card" style="max-width:440px;text-align:center">
+      <div class="card-body" style="padding:2.5rem 2rem">
+        <div style="font-size:2.5rem;margin-bottom:0.8rem" id="tIcon">🧠</div>
+        <div style="font-size:1rem;font-weight:600;margin-bottom:0.3rem" id="tStatus">Training model...</div>
+        <div style="font-size:0.75rem;color:var(--muted);margin-bottom:1.5rem" id="tSub">Processing captured samples</div>
+        <div class="prog-track" style="margin-bottom:1.5rem"><div class="prog-fill" id="tBar" style="width:0%"></div></div>
+        <div class="btn-group" style="justify-content:center">
+          <button class="btn btn-outline" onclick="resetReg()">+ Register Another</button>
+          <a class="btn btn-primary" href="users.html">View Users →</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="toasts" id="toasts"></div>
+
+<script>
+setInterval(() => {
+  document.getElementById('clock').textContent = new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
+}, 1000);
+document.getElementById('clock').textContent = new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
+
+function toast(msg, type='ok') {
+  const icons = {ok:'✓',err:'✕',info:'ℹ'};
+  const t = document.createElement('div');
+  t.className = `toast ${type}`;
+  t.innerHTML = `<span>${icons[type]}</span> ${msg}`;
+  document.getElementById('toasts').appendChild(t);
+  setTimeout(() => t.remove(), 3000);
+}
+
+function goStep(n) {
+  // validate step 1
+  if (n === 2) {
+    const roll = document.getElementById('rRoll').value.trim();
+    const name = document.getElementById('rName').value.trim();
+    if (!roll || !name) { toast('Please fill both fields','err'); return; }
+  }
+  [1,2,3].forEach(i => {
+    document.getElementById('rs'+i).style.display = i===n ? 'block' : 'none';
+    const node = document.getElementById('sn'+i);
+    node.classList.remove('active','done');
+    if (i===n) node.classList.add('active');
+    else if (i<n) node.classList.add('done');
+  });
+  if (n === 3) runTrain();
+}
+
+let capCount = 0, regStream = null;
+
+async function startRegCam() {
+  try {
+    regStream = await navigator.mediaDevices.getUserMedia({video:true});
+    const v = document.getElementById('regVideo');
+    v.srcObject = regStream; v.classList.add('on');
+    document.getElementById('regPH').style.display = 'none';
+    document.getElementById('startCamBtn').disabled = true;
+    document.getElementById('startCamBtn').textContent = '⏳ Capturing...';
+    autoCapture();
+  } catch(e) { toast('Camera access denied','err'); }
+}
+
+function autoCapture() {
+  const msg = document.getElementById('capMsg');
+  msg.style.display = 'block';
+  msg.style.background = 'var(--accent-light)';
+  msg.style.color = 'var(--accent)';
+  msg.textContent = '📸 Capturing frame 0 of 30...';
+
+  const interval = setInterval(() => {
+    capCount++;
+    if (capCount < 30) {
+      msg.textContent = `📸 Capturing frame ${capCount} of 30...`;
+    } else {
+      clearInterval(interval);
+      msg.style.background = 'var(--green-light)';
+      msg.style.color = 'var(--green)';
+      msg.textContent = '✓ All 30 frames captured — ready to train!';
+      document.getElementById('startCamBtn').style.display = 'none';
+      document.getElementById('trainBtn').style.display = 'inline-flex';
+      toast('30 frames captured!', 'ok');
+    }
+  }, 200); // captures a frame every 200ms — adjust to match your Python speed
+}
+
+function runTrain() {
+  if (regStream) { regStream.getTracks().forEach(t => t.stop()); }
+  let p = 0;
+  const msgs = ['Loading images...','Extracting features...','Training LBPH model...','Saving model...','Done!'];
+  let mi = 0;
+  const interval = setInterval(() => {
+    p += Math.random() * 18;
+    if (p >= 100) { p = 100; clearInterval(interval); }
+    document.getElementById('tBar').style.width = p + '%';
+    const ni = Math.min(Math.floor(p / 20), msgs.length - 1);
+    if (ni !== mi) { mi = ni; document.getElementById('tStatus').textContent = msgs[mi]; }
+    if (p >= 100) {
+      document.getElementById('tIcon').textContent = '✅';
+      document.getElementById('tStatus').textContent = 'Registered successfully!';
+      document.getElementById('tSub').textContent = document.getElementById('rName').value + ' has been added.';
+      toast('Face registered!','ok');
+    }
+  }, 280);
+}
+
+function resetReg() {
+  capCount = 0;
+  document.getElementById('rRoll').value = '';
+  document.getElementById('rName').value = '';
+  document.getElementById('trainBtn').style.display = 'none';
+  document.getElementById('startCamBtn').style.display = 'inline-flex';
+  document.getElementById('startCamBtn').disabled = false;
+  document.getElementById('startCamBtn').textContent = '📷 Start Camera';
+  document.getElementById('capMsg').style.display = 'none';
+  document.getElementById('tBar').style.width = '0%';
+  document.getElementById('tIcon').textContent = '🧠';
+  document.getElementById('tStatus').textContent = 'Training model...';
+  document.getElementById('tSub').textContent = 'Processing captured samples';
+  if (regStream) { regStream.getTracks().forEach(t => t.stop()); regStream = null; }
+  document.getElementById('regVideo').classList.remove('on');
+  document.getElementById('regPH').style.display = '';
+  goStep(1);
+}
+</script>
+</body>
+</html>

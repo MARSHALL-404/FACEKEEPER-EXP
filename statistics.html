@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FaceKeeper — Statistics</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<div class="topbar">
+  <a class="logo" href="index.html"><div class="logo-dot"></div>FaceKeeper</a>
+  <div class="nav-tabs">
+    <a class="tab" href="index.html">Dashboard</a>
+    <a class="tab" href="attendance.html">Attendance</a>
+    <a class="tab" href="register.html">Register</a>
+    <a class="tab" href="users.html">Users</a>
+    <a class="tab" href="reports.html">Reports</a>
+    <a class="tab active" href="statistics.html">Statistics</a>
+    <a class="tab" href="retrain.html">Re-train</a>
+  </div>
+  <div class="topbar-right">
+    <div class="live-dot"></div>
+    <span id="clock">--:--</span>
+  </div>
+</div>
+
+<div class="container">
+
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">Attendance Statistics</span>
+      <div class="btn-group">
+        <input class="input" style="width:200px;padding:0.4rem 0.75rem;font-size:0.78rem" placeholder="🔍 Search name or roll..." oninput="filterTable(this.value)">
+        <button class="btn btn-outline btn-sm" onclick="sortBy('name')">Sort by Name</button>
+        <button class="btn btn-outline btn-sm" onclick="sortBy('days')">Sort by Days</button>
+        <button class="btn btn-outline btn-sm" onclick="toast('Exporting...','info')">⬇ Export</button>
+      </div>
+    </div>
+    <table id="statsTable">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Full Name</th>
+          <th>Roll No.</th>
+          <th>Total Days Present</th>
+        </tr>
+      </thead>
+      <tbody id="statsBody"></tbody>
+    </table>
+  </div>
+
+</div>
+
+<div class="toasts" id="toasts"></div>
+
+<script>
+setInterval(() => {
+  document.getElementById('clock').textContent = new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
+}, 1000);
+document.getElementById('clock').textContent = new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
+
+function toast(msg, type='ok') {
+  const icons = {ok:'✓',err:'✕',info:'ℹ'};
+  const t = document.createElement('div');
+  t.className = `toast ${type}`;
+  t.innerHTML = `<span>${icons[type]}</span> ${msg}`;
+  document.getElementById('toasts').appendChild(t);
+  setTimeout(() => t.remove(), 3000);
+}
+
+const data = [
+  {name:'Priya Sharma', roll:'101', days:28},
+  {name:'Rohan Mehta', roll:'102', days:25},
+  {name:'Ananya Singh', roll:'103', days:30},
+  {name:'Vikram Patel', roll:'104', days:22},
+  {name:'Sneha Joshi', roll:'105', days:18},
+  {name:'Arjun Nair', roll:'106', days:29},
+  {name:'Kavya Reddy', roll:'107', days:20},
+  {name:'Amit Kumar', roll:'108', days:24},
+  {name:'Divya Rao', roll:'109', days:27},
+  {name:'Rahul Verma', roll:'110', days:23},
+  {name:'Meera Iyer', roll:'111', days:26},
+  {name:'Kiran Nair', roll:'112', days:19},
+  {name:'Pooja Das', roll:'113', days:28},
+  {name:'Suresh Pillai', roll:'114', days:21},
+  {name:'Nisha Gupta', roll:'115', days:30},
+  {name:'Arun Joshi', roll:'116', days:17},
+  {name:'Sakshi Rana', roll:'117', days:25},
+  {name:'Dev Patel', roll:'118', days:16},
+];
+
+let filtered = [...data];
+let sortDir = { name: 1, days: -1 };
+
+function render(list) {
+  document.getElementById('statsBody').innerHTML = list.map((r, i) => `
+    <tr>
+      <td style="color:var(--muted);font-size:0.75rem">${i+1}</td>
+      <td style="font-weight:500">${r.name}</td>
+      <td style="font-family:'DM Mono',monospace;font-size:0.78rem">${r.roll}</td>
+      <td>
+        <div style="display:flex;align-items:center;gap:0.8rem">
+          <span style="font-weight:600;min-width:2rem">${r.days}</span>
+          <div style="flex:1;max-width:120px;background:var(--border);border-radius:3px;height:5px;overflow:hidden">
+            <div style="height:100%;border-radius:3px;width:${(r.days/30)*100}%;background:${r.days>=25?'var(--green)':r.days>=20?'var(--accent)':r.days>=15?'var(--orange)':'var(--red)'}"></div>
+          </div>
+        </div>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function filterTable(q) {
+  filtered = data.filter(r =>
+    r.name.toLowerCase().includes(q.toLowerCase()) || r.roll.includes(q)
+  );
+  render(filtered);
+}
+
+function sortBy(key) {
+  sortDir[key] *= -1;
+  filtered.sort((a, b) => {
+    if (key === 'name') return sortDir.name * a.name.localeCompare(b.name);
+    return sortDir.days * (b.days - a.days);
+  });
+  render(filtered);
+}
+
+render(data);
+</script>
+</body>
+</html>

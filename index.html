@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FaceKeeper — Dashboard</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<div class="topbar">
+  <a class="logo" href="index.html"><div class="logo-dot"></div>FaceKeeper</a>
+  <div class="nav-tabs">
+    <a class="tab active" href="index.html">Dashboard</a>
+    <a class="tab" href="attendance.html">Attendance</a>
+    <a class="tab" href="register.html">Register</a>
+    <a class="tab" href="users.html">Users</a>
+    <a class="tab" href="reports.html">Reports</a>
+    <a class="tab" href="statistics.html">Statistics</a>
+    <a class="tab" href="retrain.html">Re-train</a>
+  </div>
+  <div class="topbar-right">
+    <div class="live-dot"></div>
+    <span id="clock">--:--</span>
+  </div>
+</div>
+
+<div class="container">
+
+  <div class="grid-4">
+    <div class="stat blue">
+      <div class="stat-label">Total Registered</div>
+      <div class="stat-value">30</div>
+      <div class="stat-sub">Active users</div>
+      <div class="stat-bar"><div class="stat-bar-fill" style="width:100%"></div></div>
+    </div>
+    <div class="stat green">
+      <div class="stat-label">Present Today</div>
+      <div class="stat-value">24</div>
+      <div class="stat-sub">80% attendance</div>
+      <div class="stat-bar"><div class="stat-bar-fill" style="width:80%"></div></div>
+    </div>
+    <div class="stat red">
+      <div class="stat-label">Absent Today</div>
+      <div class="stat-value">6</div>
+      <div class="stat-sub">20% absent</div>
+      <div class="stat-bar"><div class="stat-bar-fill" style="width:20%"></div></div>
+    </div>
+    <div class="stat orange">
+      <div class="stat-label">Late Arrivals</div>
+      <div class="stat-value">3</div>
+      <div class="stat-sub">After 9:00 AM</div>
+      <div class="stat-bar"><div class="stat-bar-fill" style="width:12%"></div></div>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">Weekly Attendance</span>
+        <span class="pill blue">This Week</span>
+      </div>
+      <div class="card-body">
+        <div class="bars" id="weekBars"></div>
+        <div class="blabels"><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">Live Log</span>
+        <span class="pill green">● Live</span>
+      </div>
+      <div class="card-body">
+        <div class="log" id="dashLog">
+          <div><span class="t">09:02</span><span class="ok">✓ Priya Sharma — present</span></div>
+          <div><span class="t">09:03</span><span class="ok">✓ Rohan Mehta — present</span></div>
+          <div><span class="t">09:05</span><span class="warn">⚠ Unknown face detected</span></div>
+          <div><span class="t">09:07</span><span class="ok">✓ Ananya Singh — present</span></div>
+          <div><span class="t">09:09</span><span class="info">ℹ Low confidence (0.41)</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">Recent Records</span>
+      <a class="btn btn-outline btn-sm" href="attendance.html">View All</a>
+    </div>
+    <table>
+      <thead><tr><th>Name</th><th>Roll No.</th><th>Time In</th><th>Confidence</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr><td>Priya Sharma</td><td>101</td><td>09:02:14</td><td>97.3%</td><td><span class="pill green">● Present</span></td></tr>
+        <tr><td>Rohan Mehta</td><td>102</td><td>09:03:41</td><td>95.1%</td><td><span class="pill green">● Present</span></td></tr>
+        <tr><td>Ananya Singh</td><td>103</td><td>09:07:23</td><td>98.8%</td><td><span class="pill green">● Present</span></td></tr>
+        <tr><td>Vikram Patel</td><td>104</td><td>09:14:02</td><td>91.5%</td><td><span class="pill orange">⏱ Late</span></td></tr>
+        <tr><td>Sneha Joshi</td><td>105</td><td>—</td><td>—</td><td><span class="pill red">✕ Absent</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+</div>
+
+<div class="toasts" id="toasts"></div>
+
+<script>
+setInterval(() => {
+  document.getElementById('clock').textContent = new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
+}, 1000);
+document.getElementById('clock').textContent = new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
+
+function buildBars(id, data, hiIdx) {
+  const el = document.getElementById(id); if (!el) return;
+  const max = Math.max(...data);
+  el.innerHTML = data.map((v,i) =>
+    `<div class="bar${i===hiIdx?' hi':''}" style="height:${v/max*100}%" title="${v}%"></div>`
+  ).join('');
+}
+buildBars('weekBars', [78,85,90,82,88,60,75], 6);
+</script>
+</body>
+</html>
